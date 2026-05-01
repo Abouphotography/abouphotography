@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Avis clients</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #0f0f0f; color: #e5e5e5; min-height: 100vh; }
+
+    /* LOGIN */
+    #login-screen {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh;
+    }
+    .login-box {
+      background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 16px;
+      padding: 2.5rem; width: 340px; text-align: center;
+    }
+    .login-box h1 { font-size: 20px; font-weight: 500; margin-bottom: 8px; }
+    .login-box p  { font-size: 13px; color: #888; margin-bottom: 1.5rem; }
+    .login-box input {
+      width: 100%; padding: 12px 16px; border-radius: 10px;
+      border: 1px solid #333; background: #111; color: #fff;
+      font-size: 15px; margin-bottom: 12px; outline: none;
+    }
+    .login-box input:focus { border-color: #555; }
+    .btn-login {
+      width: 100%; padding: 12px; border-radius: 10px;
+      background: #fff; color: #000; font-size: 15px; font-weight: 500;
+      border: none; cursor: pointer;
+    }
+    .btn-login:hover { background: #e5e5e5; }
+    #login-error { color: #ef4444; font-size: 13px; margin-top: 10px; display: none; }
+
+    /* APP */
+    #app { display: none; max-width: 860px; margin: 0 auto; padding: 2rem 1rem; }
+    .app-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 2rem;
+    }
+    .app-header h1 { font-size: 22px; font-weight: 500; }
+    .app-header span { font-size: 13px; color: #666; }
+    .btn-logout {
+      background: transparent; border: 1px solid #333; color: #999;
+      padding: 7px 14px; border-radius: 8px; font-size: 13px; cursor: pointer;
+    }
+    .btn-logout:hover { border-color: #555; color: #ccc; }
+
+    .section-title {
+      font-size: 13px; font-weight: 500; text-transform: uppercase;
+      letter-spacing: .06em; color: #666; margin-bottom: 12px;
+    }
+
+    /* CARDS */
+    .avis-card {
+      background: #1a1a1a; border: 1px solid #252525; border-radius: 14px;
+      padding: 1.25rem 1.5rem; margin-bottom: 10px;
+      display: flex; gap: 1rem; align-items: flex-start;
+    }
+    .avis-card.published { border-color: #1f3a1f; background: #141e14; }
+    .avis-body { flex: 1; }
+    .avis-meta {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 8px;
+    }
+    .avis-nom { font-size: 14px; font-weight: 500; }
+    .avis-occasion {
+      font-size: 11px; background: #252525; padding: 3px 9px;
+      border-radius: 20px; color: #888;
+    }
+    .avis-occasion.published { background: #1f3a1f; color: #4ade80; }
+    .avis-texte { font-size: 13px; color: #aaa; line-height: 1.6; }
+    .avis-date { font-size: 11px; color: #555; margin-top: 6px; }
+
+    .avis-actions { display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; }
+    .btn-approve {
+      padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 500;
+      background: #16a34a; color: #fff; border: none; cursor: pointer; white-space: nowrap;
+    }
+    .btn-approve:hover { background: #15803d; }
+    .btn-approve:disabled { background: #1f3a1f; color: #4ade80; cursor: default; }
+    .btn-delete {
+      padding: 8px 16px; border-radius: 8px; font-size: 13px;
+      background: transparent; color: #666; border: 1px solid #2a2a2a; cursor: pointer;
+    }
+    .btn-delete:hover { border-color: #ef4444; color: #ef4444; }
+
+    .empty { text-align: center; padding: 3rem; color: #555; font-size: 14px; }
+    .loading { text-align: center; padding: 2rem; color: #555; font-size: 14px; }
+    .divider { border: none; border-top: 1px solid #1e1e1e; margin: 2rem 0; }
+    .toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+      background: #16a34a; color: #fff; padding: 12px 24px; border-radius: 10px;
+      font-size: 14px; font-weight: 500; opacity: 0; transition: opacity .3s;
+      pointer-events: none; z-index: 999;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<!-- ÉCRAN LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <h1>🔐 Admin avis</h1>
+    <p>Abou Photography</p>
+    <input type="password" id="pwd-input" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')login()">
+    <button class="btn-login" onclick="login()">Connexion</button>
+    <div id="login-error">Mot de passe incorrect</div>
+  </div>
+</div>
+
+<!-- APP PRINCIPALE -->
+<div id="app">
+  <div class="app-header">
+    <div>
+      <h1>Avis clients</h1>
+      <span id="count-label"></span>
+    </div>
+    <button class="btn-logout" onclick="logout()">Déconnexion</button>
+  </div>
+
+  <div class="section-title">En attente de validation</div>
+  <div id="pending-list"><div class="loading">Chargement…</div></div>
+
+  <hr class="divider">
+
+  <div class="section-title">Publiés sur le site</div>
+  <div id="published-list"><div class="loading">Chargement…</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let adminPassword = '';
+
+function login() {
+  const pwd = document.getElementById('pwd-input').value;
+  if (!pwd) return;
+  adminPassword = pwd;
+
+  // Test rapide : on essaie de charger les avis en attente
+  fetchPending().then(data => {
+    if (data === null) {
+      document.getElementById('login-error').style.display = 'block';
+      adminPassword = '';
+    } else {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      renderPending(data);
+      loadPublished();
+    }
+  });
+}
+
+function logout() {
+  adminPassword = '';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('pwd-input').value = '';
+}
+
+async function fetchPending() {
+  try {
+    const res = await fetch('/.netlify/functions/pending-avis', {
+      headers: { 'x-admin-password': adminPassword }
+    });
+    if (res.status === 401) return null;
+    return await res.json();
+  } catch { return null; }
+}
+
+async function loadPublished() {
+  const res = await fetch('/.netlify/functions/get-avis');
+  const data = await res.json();
+  renderPublished(data);
+}
+
+function renderPending(list) {
+  const el = document.getElementById('pending-list');
+  if (!list.length) { el.innerHTML = '<div class="empty">Aucun avis en attente ✓</div>'; return; }
+
+  el.innerHTML = list.map(a => `
+    <div class="avis-card" id="pending-${a.id}">
+      <div class="avis-body">
+        <div class="avis-meta">
+          <span class="avis-nom">${esc(a.nom)}</span>
+          <span class="avis-occasion">${esc(a.occasion)}</span>
+          <span style="color:#f59e0b">${'★'.repeat(a.note || 5)}</span>
+        </div>
+        <div class="avis-texte">${esc(a.texte)}</div>
+        <div class="avis-date">${new Date(a.date).toLocaleDateString('fr-FR', {day:'numeric',month:'long',year:'numeric'})}</div>
+      </div>
+      <div class="avis-actions">
+        <button class="btn-approve" onclick="approveAvis(${JSON.stringify(a).replace(/"/g,'&quot;')})">✓ Publier</button>
+        <button class="btn-delete" onclick="ignorer('pending-${a.id}')">Ignorer</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderPublished(list) {
+  const el = document.getElementById('published-list');
+  document.getElementById('count-label').textContent = `${list.length} avis publiés`;
+
+  if (!list.length) { el.innerHTML = '<div class="empty">Aucun avis publié pour l\'instant</div>'; return; }
+
+  el.innerHTML = list.map(a => `
+    <div class="avis-card published" id="pub-${a._key}">
+      <div class="avis-body">
+        <div class="avis-meta">
+          <span class="avis-nom">${esc(a.nom)}</span>
+          <span class="avis-occasion published">${esc(a.occasion)}</span>
+        </div>
+        <div class="avis-texte">${esc(a.texte)}</div>
+      </div>
+      <div class="avis-actions">
+        <button class="btn-approve" disabled>✓ Publié</button>
+        <button class="btn-delete" onclick="deleteAvis('${a._key}')">Supprimer</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function approveAvis(avis) {
+  const res = await fetch('/.netlify/functions/manage-avis', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+    body: JSON.stringify({ action: 'approve', avis })
+  });
+  if (res.ok) {
+    document.getElementById(`pending-${avis.id}`)?.remove();
+    showToast('✓ Avis publié sur le site !');
+    loadPublished();
+    checkEmptyPending();
+  }
+}
+
+async function deleteAvis(key) {
+  if (!confirm('Supprimer cet avis du site ?')) return;
+  const res = await fetch('/.netlify/functions/manage-avis', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-admin-password': adminPassword },
+    body: JSON.stringify({ action: 'delete', key })
+  });
+  if (res.ok) {
+    document.getElementById(`pub-${key}`)?.remove();
+    showToast('Avis supprimé');
+    loadPublished();
+  }
+}
+
+function ignorer(id) {
+  document.getElementById(id)?.remove();
+  checkEmptyPending();
+}
+
+function checkEmptyPending() {
+  const el = document.getElementById('pending-list');
+  if (!el.querySelector('.avis-card')) {
+    el.innerHTML = '<div class="empty">Aucun avis en attente ✓</div>';
+  }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>

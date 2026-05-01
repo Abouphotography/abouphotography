@@ -1,0 +1,41 @@
+STRUCTURE DU SITE ABOU PHOTOGRAPHY
+═══════════════════════════════════════════════════════
+
+site/
+├── index.html                    ← Le site (ne pas renommer)
+└── images/
+    ├── logo.png                  ← Ton logo
+    ├── portrait-abou.jpg         ← Ta photo 'À propos'
+    ├── prestations/
+    │   ├── categories.png
+    │   ├── formules-portrait.png
+    │   ├── options-galerie.png
+    │   └── formules-mariage.png
+    └── portfolio/
+        ├── mariage/
+        │   ├── cover.jpg         ← photo de couverture
+        │   ├── 01.jpg
+        │   ├── 02.jpg  ...       ← autant que tu veux
+        ├── lifestyle/
+        │   ├── cover.jpg         ← photo de couverture
+        │   ├── studio/
+        │   │   ├── 01.jpg
+        │   │   └── 02.jpg  ...
+        │   ├── portrait/
+        │   │   ├── 01.jpg
+        │   │   └── 02.jpg  ...
+        │   └── anniversaire/
+        │       ├── 01.jpg
+        │       └── 02.jpg  ...
+        └── grossesse/
+            ├── cover.jpg         ← photo de couverture
+            ├── 01.jpg
+            └── 02.jpg  ...
+
+═══════════════════════════════════════════════════════
+RÈGLES SIMPLES :
+  1. Ne jamais changer le nom des dossiers
+  2. Nommer tes photos : 01.jpg, 02.jpg, 03.jpg...
+  3. Ne jamais changer le nom de index.html
+  4. Pour publier sur Netlify : glisse le dossier 'site' sur netlify.com/drop
+═══════════════════════════════════════════════════════
